@@ -6,11 +6,12 @@ import EditableRow from './EditableRow';
 import { getMortalityTable, getCountries } from '../services/api';
 
 const MortalityTable = () => {
-  const [year, setYear] = useState('2020');
+  const [year, setYear] = useState('');
   const [data, setData] = useState([]);
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('');
   const [editId, setEditId] = useState(null);
+  const [years, setYears] = useState([]);
 
   useEffect(() => {
     fetchMortalityData();
@@ -25,6 +26,10 @@ const MortalityTable = () => {
         uniqueId: `${item.id}-${item.year}`,
       }));
       setData(dataWithUniqueIds);
+
+      const uniqueYears = [...new Set(dataWithUniqueIds.map(item => item.year))].sort((a, b) => a - b);
+      setYears(uniqueYears);
+      if (!year) setYear(uniqueYears[0]);
     } catch (error) {
       console.error('Error fetching mortality data:', error);
     }
@@ -63,7 +68,10 @@ const MortalityTable = () => {
     setSelectedCountry(country);
   };
 
-  const filteredData = data.filter((row) => (selectedCountry ? row.iso_code === selectedCountry : true));
+  const filteredData = data.filter((row) =>
+    (selectedCountry ? row.iso_code === selectedCountry : true) &&
+    row.year === parseInt(year)
+  );
 
   return (
     <>
@@ -81,8 +89,9 @@ const MortalityTable = () => {
               <FormControl fullWidth variant="outlined">
                 <InputLabel>Year</InputLabel>
                 <Select value={year} onChange={handleYearChange} label="Year">
-                  <MenuItem value="2020">2020</MenuItem>
-                  <MenuItem value="2021">2021</MenuItem>
+                  {years.map((year) => (
+                    <MenuItem key={year} value={year}>{year}</MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
